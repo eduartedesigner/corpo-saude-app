@@ -9,8 +9,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm install --legacy-peer-deps && \
-    npm install react-native-worklets-core --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Copy source
 COPY . .
