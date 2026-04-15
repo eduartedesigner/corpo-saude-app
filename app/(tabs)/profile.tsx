@@ -5,7 +5,15 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, ToastAndroid, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+
+const showAlert = (title: string, message: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
 import { useRouter } from 'expo-router';
 import { ScreenContainer } from '../../src/components/layout';
 import { Text, H3, Card } from '../../src/components/ui';
@@ -17,35 +25,53 @@ const MENU_ITEMS = [
   { icon: '🏥', label: 'Avaliação MQV', desc: 'Ver ou refazer sua avaliação de saúde', route: '/(onboarding)/mqv-result' },
   { icon: '💳', label: 'Assinatura', desc: 'Gerenciar seu plano', route: '/(onboarding)/subscription-wall' },
   { icon: '🔔', label: 'Notificações', desc: 'Configurar alertas e lembretes', route: null },
-  { icon: '📏', label: 'Medidas Corporais', desc: 'Atualizar peso e medidas', route: null },
-  { icon: '📸', label: 'Fotos de Evolução', desc: 'Comparar seu antes e depois', route: null },
-  { icon: '🏋️', label: 'Minha Unidade', desc: 'Selecionar academia', route: null },
-  { icon: '🔒', label: 'Privacidade (LGPD)', desc: 'Seus dados e direitos', route: null },
-  { icon: '❓', label: 'Ajuda e Suporte', desc: 'Fale conosco', route: null },
+  { icon: '📏', label: 'Medidas Corporais', desc: 'Atualizar peso e medidas', route: '/medidas-corporais' },
+  { icon: '📸', label: 'Fotos de Evolução', desc: 'Comparar seu antes e depois', route: '/fotos-evolucao' },
+  { icon: '🏋️', label: 'Minha Unidade', desc: 'Selecionar academia', route: '/minha-unidade' },
+  { icon: '🔒', label: 'Privacidade (LGPD)', desc: 'Seus dados e direitos', route: '/privacidade' },
+  { icon: '❓', label: 'Ajuda e Suporte', desc: 'Fale conosco', route: '/ajuda-suporte' },
 ];
+
+const MOCK_PROFILE = {
+  full_name: 'Eduardo Silva',
+  phone: '(11) 99999-1234',
+  goal: 'Hipertrofia',
+  level: 'Intermediário',
+  joinedAt: 'Março 2025',
+};
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const profile = useAuthStore((s) => s.profile);
+  const storeProfile = useAuthStore((s) => s.profile);
   const hasActiveSubscription = useAuthStore((s) => s.hasActiveSubscription);
   const signOut = useAuthStore((s) => s.signOut);
+  const userId = useAuthStore((s) => s.userId);
+
+  // Usa mock quando não há usuário logado
+  const profile = userId ? storeProfile : MOCK_PROFILE;
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut();
-            router.replace('/(auth)/welcome');
+    if (Platform.OS === 'web') {
+      if (window.confirm('Tem certeza que deseja sair?')) {
+        signOut().then(() => router.replace('/(auth)/welcome'));
+      }
+    } else {
+      Alert.alert(
+        'Sair da conta',
+        'Tem certeza que deseja sair?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sair',
+            style: 'destructive',
+            onPress: async () => {
+              await signOut();
+              router.replace('/(auth)/welcome');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
@@ -63,11 +89,31 @@ export default function ProfileScreen() {
           <View style={styles.planBadge}>
             <Text
               variant="captionBold"
-              color={hasActiveSubscription ? colors.semantic.success : colors.text.muted}
+              color={!userId || hasActiveSubscription ? colors.semantic.success : colors.text.muted}
             >
-              {hasActiveSubscription ? '⭐ PREMIUM' : 'GRATUITO'}
+              {!userId || hasActiveSubscription ? '⭐ PREMIUM' : 'GRATUITO'}
             </Text>
           </View>
+          {/* Stats rápidos */}
+          <View style={styles.headerStats}>
+            <View style={styles.headerStat}>
+              <Text variant="label" color={colors.white}>12</Text>
+              <Text variant="caption" color={colors.text.muted}>Treinos</Text>
+            </View>
+            <View style={styles.headerStatDivider} />
+            <View style={styles.headerStat}>
+              <Text variant="label" color={colors.white}>4</Text>
+              <Text variant="caption" color={colors.text.muted}>Semanas</Text>
+            </View>
+            <View style={styles.headerStatDivider} />
+            <View style={styles.headerStat}>
+              <Text variant="label" color={colors.white}>8,4t</Text>
+              <Text variant="caption" color={colors.text.muted}>Levantado</Text>
+            </View>
+          </View>
+          <Text variant="caption" color={colors.text.muted}>
+            Membro desde {(profile as any)?.joinedAt ?? MOCK_PROFILE.joinedAt}
+          </Text>
         </View>
 
         {/* Menu items */}
@@ -80,7 +126,7 @@ export default function ProfileScreen() {
                 if (item.route) {
                   router.push(item.route as any);
                 } else {
-                  Alert.alert('Em breve', `"${item.label}" estará disponível em breve.`);
+                  showAlert('Em breve', `"${item.label}" estará disponível em breve.`);
                 }
               }}
               activeOpacity={0.7}
@@ -152,6 +198,28 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.dark.border,
+  },
+  headerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing[4],
+    backgroundColor: colors.dark.surface,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[5],
+    gap: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.dark.border,
+  },
+  headerStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  headerStatDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: colors.dark.border,
   },
   menu: {
     paddingTop: spacing[2],

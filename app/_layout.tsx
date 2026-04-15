@@ -74,6 +74,11 @@ export default function RootLayout() {
             <Stack.Screen name="workout-session" options={{ animation: 'slide_from_bottom' }} />
             <Stack.Screen name="exercise-detail" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="muscle-exercises" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="medidas-corporais" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="fotos-evolucao" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="minha-unidade" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="privacidade" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="ajuda-suporte" options={{ animation: 'slide_from_right' }} />
           </Stack>
         </View>
       </SafeAreaProvider>
