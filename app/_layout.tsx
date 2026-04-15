@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -64,21 +64,21 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: colors.dark.background },
-              animation: 'slide_from_right',
+              animation: Platform.OS === 'web' ? 'none' : 'slide_from_right',
             }}
           >
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(onboarding)" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="workout-session" options={{ animation: 'slide_from_bottom' }} />
-            <Stack.Screen name="exercise-detail" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="muscle-exercises" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="medidas-corporais" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="fotos-evolucao" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="minha-unidade" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="privacidade" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="ajuda-suporte" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="workout-session" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_bottom' }} />
+            <Stack.Screen name="exercise-detail" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
+            <Stack.Screen name="muscle-exercises" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
+            <Stack.Screen name="medidas-corporais" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
+            <Stack.Screen name="fotos-evolucao" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
+            <Stack.Screen name="minha-unidade" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
+            <Stack.Screen name="privacidade" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
+            <Stack.Screen name="ajuda-suporte" options={{ animation: Platform.OS === 'web' ? 'none' : 'slide_from_right' }} />
           </Stack>
         </View>
       </SafeAreaProvider>
