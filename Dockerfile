@@ -1,35 +1,12 @@
 # =============================================
 # Dockerfile — App Corpo e Saúde (Expo Web)
+# Deploy direto do dist pré-buildado
 # =============================================
 
-# Stage 1: Build
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm install --legacy-peer-deps
-
-# Copy source
-COPY . .
-
-# Build args para variáveis do Expo
-ARG EXPO_PUBLIC_SUPABASE_URL
-ARG EXPO_PUBLIC_SUPABASE_ANON_KEY
-ARG EXPO_PUBLIC_ASAAS_ENV
-ENV EXPO_PUBLIC_SUPABASE_URL=$EXPO_PUBLIC_SUPABASE_URL
-ENV EXPO_PUBLIC_SUPABASE_ANON_KEY=$EXPO_PUBLIC_SUPABASE_ANON_KEY
-ENV EXPO_PUBLIC_ASAAS_ENV=$EXPO_PUBLIC_ASAAS_ENV
-
-# Build static web output
-RUN npx expo export --platform web
-
-# Stage 2: Serve with nginx
 FROM nginx:alpine
 
-# Copy built files
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy pre-built files
+COPY dist /usr/share/nginx/html
 
 # Nginx config for SPA (single page app)
 RUN echo 'server { \
