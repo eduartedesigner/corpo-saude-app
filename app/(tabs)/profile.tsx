@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, ToastAndroid, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenContainer } from '../../src/components/layout';
 import { Text, H3, Card } from '../../src/components/ui';
@@ -79,6 +79,8 @@ export default function ProfileScreen() {
               onPress={() => {
                 if (item.route) {
                   router.push(item.route as any);
+                } else {
+                  Alert.alert('Em breve', `"${item.label}" estará disponível em breve.`);
                 }
               }}
               activeOpacity={0.7}

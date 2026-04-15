@@ -73,6 +73,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="workout-session" options={{ animation: 'slide_from_bottom' }} />
             <Stack.Screen name="exercise-detail" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="muscle-exercises" options={{ animation: 'slide_from_right' }} />
           </Stack>
         </View>
       </SafeAreaProvider>

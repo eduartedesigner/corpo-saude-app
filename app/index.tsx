@@ -14,26 +14,21 @@ export default function Index() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const hasCompletedOnboarding = useAuthStore((s) => s.hasCompletedOnboarding);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.brand.red} />
-      </View>
-    );
-  }
+  // MODO TESTE — inicia no onboarding sem login
+  return <Redirect href="/(onboarding)/intro" />;
 
   // Não autenticado → Tela de login
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/welcome" />;
-  }
+  // if (!isAuthenticated) {
+  //   return <Redirect href="/(auth)/welcome" />;
+  // }
 
   // Autenticado mas não completou onboarding MQV → Onboarding
-  if (!hasCompletedOnboarding) {
-    return <Redirect href="/(onboarding)/intro" />;
-  }
+  // if (!hasCompletedOnboarding) {
+  //   return <Redirect href="/(onboarding)/intro" />;
+  // }
 
   // Tudo ok → Home (Tabs)
-  return <Redirect href="/(tabs)/home" />;
+  // return <Redirect href="/(tabs)/home" />;
 }
 
 const styles = StyleSheet.create({

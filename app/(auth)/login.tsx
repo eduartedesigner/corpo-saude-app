@@ -45,7 +45,12 @@ export default function LoginScreen() {
     if (result.error) {
       setError(result.error);
     } else {
-      router.replace('/(onboarding)/intro');
+      const { hasCompletedOnboarding } = useAuthStore.getState();
+      if (hasCompletedOnboarding) {
+        router.replace('/(tabs)/home');
+      } else {
+        router.replace('/(onboarding)/intro');
+      }
     }
   };
 

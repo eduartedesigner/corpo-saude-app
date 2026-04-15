@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenContainer } from '../../src/components/layout';
@@ -14,6 +14,7 @@ import { Button, Text, H2, H4, Card } from '../../src/components/ui';
 import { colors } from '../../src/theme/colors';
 import { spacing, borderRadius } from '../../src/theme/spacing';
 import { useAuthStore } from '../../src/stores/authStore';
+import { supabase } from '../../src/services/supabase';
 
 type Plan = 'mensal' | 'anual';
 
@@ -48,12 +49,44 @@ export default function SubscriptionWall() {
 
   const handleSubscribe = async () => {
     setLoading(true);
-    // TODO: Integrate with payment gateway (Asaas/Stripe)
-    // For now, simulate subscription
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSubscriptionActive(true);
-    setLoading(false);
-    router.replace('/(tabs)/home');
+    try {
+      const userId = useAuthStore.getState().userId;
+
+      // Modo teste — sem usuário logado, vai direto para home
+      if (!userId) {
+        setSubscriptionActive(true);
+        setLoading(false);
+        router.replace('/(tabs)/home');
+        return;
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(now);
+      if (selectedPlan === 'anual') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
+
+      const { error } = await supabase.from('subscriptions').upsert({
+        user_id: userId,
+        plan: selectedPlan,
+        status: 'active',
+        started_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        updated_at: now.toISOString(),
+      }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      setSubscriptionActive(true);
+      router.replace('/(tabs)/home');
+    } catch (err) {
+      console.error('Erro ao registrar assinatura:', err);
+      Alert.alert('Erro', 'Não foi possível registrar sua assinatura. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = () => {

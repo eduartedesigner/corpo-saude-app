@@ -1,6 +1,7 @@
 /**
  * Workout Session — Execução do treino
- * Exercícios um a um, marcação de séries, timer de descanso
+ * Exercícios um a um, marcação de séries, timer de descanso.
+ * Salva a sessão no Supabase ao concluir.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -14,9 +15,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenContainer } from '../src/components/layout';
-import { Text, Button, H3, H4 } from '../src/components/ui';
+import { Text, Button, H3 } from '../src/components/ui';
 import { colors } from '../src/theme/colors';
 import { spacing, borderRadius } from '../src/theme/spacing';
+import { supabase } from '../src/services/supabase';
+import { useAuthStore } from '../src/stores/authStore';
 
 const EXERCISES = [
   { id: '1', name: 'Supino com Barra', sets: 4, reps: 12, muscle: 'Peito', rest: 90, gif: require('../assets/gifs/peitoral/Supino barra (1).gif') },
@@ -25,9 +28,11 @@ const EXERCISES = [
   { id: '4', name: 'Tríceps Testa', sets: 3, reps: 12, muscle: 'Tríceps', rest: 90, gif: require('../assets/gifs/triceps/Triceps testa 01 (1).gif') },
   { id: '5', name: 'Crossover', sets: 3, reps: 15, muscle: 'Peito', rest: 60, gif: require('../assets/gifs/peitoral/CROSSOVER (1).gif') },
 ];
+// Nota: os GIFs acima já existem em assets/gifs/ com esses nomes exatos.
 
 export default function WorkoutSessionScreen() {
   const router = useRouter();
+  const userId = useAuthStore((s) => s.userId);
   const [currentExercise, setCurrentExercise] = useState(0);
   const [completedSets, setCompletedSets] = useState<boolean[][]>(
     EXERCISES.map((e) => Array(e.sets).fill(false))
@@ -35,6 +40,8 @@ export default function WorkoutSessionScreen() {
   const [resting, setResting] = useState(false);
   const [restTimer, setRestTimer] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const startedAt = useRef(new Date().toISOString());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -80,7 +87,6 @@ export default function WorkoutSessionScreen() {
         : e
     );
     setCompletedSets(updated);
-    // Start rest timer
     setRestTimer(exercise.rest);
     setResting(true);
   };
@@ -95,8 +101,64 @@ export default function WorkoutSessionScreen() {
     }
   };
 
-  const finishWorkout = () => {
+  const saveSession = async () => {
+    if (!userId) return;
+    try {
+      setSaving(true);
+      const totalSets = completedSets.reduce(
+        (acc, ex) => acc + ex.filter(Boolean).length, 0
+      );
+      await supabase.from('workout_sessions').insert({
+        user_id: userId,
+        started_at: startedAt.current,
+        finished_at: new Date().toISOString(),
+        duration_seconds: elapsed,
+        exercises_count: EXERCISES.length,
+        sets_count: totalSets,
+        status: 'completed',
+      });
+
+      // Atualizar streak
+      const today = new Date().toISOString().split('T')[0];
+      const { data: streak } = await supabase
+        .from('streaks')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (streak) {
+        const lastDate = streak.last_workout_date;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        const newStreak = lastDate === yesterdayStr || lastDate === today
+          ? streak.current_streak + (lastDate === today ? 0 : 1)
+          : 1;
+        const longest = Math.max(newStreak, streak.longest_streak ?? 0);
+
+        await supabase
+          .from('streaks')
+          .update({ current_streak: newStreak, longest_streak: longest, last_workout_date: today })
+          .eq('user_id', userId);
+      } else {
+        await supabase.from('streaks').insert({
+          user_id: userId,
+          current_streak: 1,
+          longest_streak: 1,
+          last_workout_date: today,
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao salvar sessão:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const finishWorkout = async () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    await saveSession();
     Alert.alert(
       '🎉 Treino Concluído!',
       `Duração: ${formatTime(elapsed)}\n${EXERCISES.length} exercícios completados!`,
@@ -212,11 +274,11 @@ export default function WorkoutSessionScreen() {
       {/* Footer */}
       <View style={styles.footer}>
         <Button
-          title={isLastExercise ? 'FINALIZAR TREINO 🎉' : 'PRÓXIMO EXERCÍCIO →'}
+          title={saving ? 'Salvando...' : isLastExercise ? 'FINALIZAR TREINO 🎉' : 'PRÓXIMO EXERCÍCIO →'}
           onPress={goNext}
           size="lg"
           fullWidth
-          disabled={!allSetsComplete}
+          disabled={!allSetsComplete || saving}
         />
         {!allSetsComplete && (
           <Text variant="caption" color={colors.text.muted} align="center" style={{ marginTop: spacing[2] }}>

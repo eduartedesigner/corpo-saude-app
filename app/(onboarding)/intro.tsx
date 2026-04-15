@@ -90,6 +90,13 @@ export default function OnboardingIntro() {
             size="lg"
             fullWidth
           />
+          <Button
+            title="Pular por enquanto"
+            onPress={() => router.replace('/(tabs)/home')}
+            size="md"
+            fullWidth
+            variant="ghost"
+          />
         </View>
       </View>
     </ScreenContainer>

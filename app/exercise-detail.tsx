@@ -1,5 +1,5 @@
 /**
- * Exercise Detail — Detalhe do exercício com GIF
+ * Exercise Detail — Detalhe do exercício com GIF, instruções e dicas
  */
 
 import React from 'react';
@@ -9,124 +9,30 @@ import { ScreenContainer } from '../src/components/layout';
 import { Text, H3 } from '../src/components/ui';
 import { colors } from '../src/theme/colors';
 import { spacing, borderRadius } from '../src/theme/spacing';
+import { ALL_EXERCISES } from '../src/data/exercises';
 
-// Mapa de exercícios com GIFs e instruções
-const EXERCISE_DATA: Record<string, {
-  name: string;
-  muscle: string;
-  sets: string;
-  reps: string;
-  rest: string;
-  gif: any;
-  instructions: string[];
-  tips: string[];
-}> = {
-  '1': {
-    name: 'Supino com Barra',
-    muscle: 'Peito',
-    sets: '4',
-    reps: '12',
-    rest: '90s',
-    gif: require('../assets/gifs/peitoral/Supino barra (1).gif'),
-    instructions: [
-      'Deite no banco com os pés apoiados no chão',
-      'Segure a barra com pegada um pouco mais larga que os ombros',
-      'Desça a barra controladamente até tocar o peito',
-      'Empurre a barra de volta à posição inicial',
-    ],
-    tips: [
-      'Mantenha os ombros retraídos e para baixo',
-      'Não deixe os cotovelos ultrapassar 90°',
-      'Expire na fase de subida',
-    ],
-  },
-  '2': {
-    name: 'Crucifixo com Halteres',
-    muscle: 'Peito',
-    sets: '3',
-    reps: '15',
-    rest: '60s',
-    gif: require('../assets/gifs/peitoral/Crucifico com halteres (1).gif'),
-    instructions: [
-      'Deite no banco segurando um halter em cada mão',
-      'Estenda os braços acima do peito com leve flexão dos cotovelos',
-      'Abra os braços lateralmente em arco até sentir o alongamento',
-      'Retorne à posição inicial contraindo o peito',
-    ],
-    tips: [
-      'Mantenha leve flexão nos cotovelos',
-      'Movimento controlado, sem soltar os halteres',
-      'Foque na contração do peitoral',
-    ],
-  },
-  '3': {
-    name: 'Tríceps Francês no Cabo',
-    muscle: 'Tríceps',
-    sets: '4',
-    reps: '12',
-    rest: '90s',
-    gif: require('../assets/gifs/triceps/Triceps frances no cabo com corda (1).gif'),
-    instructions: [
-      'Segure a corda com as duas mãos acima da cabeça',
-      'Mantenha os cotovelos fixos apontando para cima',
-      'Estenda os braços para baixo até a extensão total',
-      'Retorne lentamente à posição inicial',
-    ],
-    tips: [
-      'Não mova os cotovelos durante o movimento',
-      'Separe as pontas da corda ao estender',
-      'Mantenha o core contraído',
-    ],
-  },
-  '4': {
-    name: 'Tríceps Testa',
-    muscle: 'Tríceps',
-    sets: '3',
-    reps: '12',
-    rest: '90s',
-    gif: require('../assets/gifs/triceps/Triceps testa 01 (1).gif'),
-    instructions: [
-      'Deite no banco com um halter em cada mão',
-      'Estenda os braços acima do rosto',
-      'Flexione os cotovelos trazendo os halteres até a testa',
-      'Estenda de volta contraindo o tríceps',
-    ],
-    tips: [
-      'Cotovelos apontando para o teto',
-      'Movimento lento na descida',
-      'Não bata os halteres na testa',
-    ],
-  },
-  '5': {
-    name: 'Crossover',
-    muscle: 'Peito',
-    sets: '3',
-    reps: '15',
-    rest: '60s',
-    gif: require('../assets/gifs/peitoral/CROSSOVER (1).gif'),
-    instructions: [
-      'Posicione-se no centro da polia alta',
-      'Segure as alças com os braços abertos',
-      'Puxe as alças em direção ao centro do corpo',
-      'Junte as mãos na frente do abdômen',
-    ],
-    tips: [
-      'Leve inclinação para frente',
-      'Sinta a contração no centro do peito',
-      'Retorne de forma controlada',
-    ],
-  },
+// Mantém suporte a IDs numéricos legados do home.tsx (dias 1-17)
+const LEGACY_ID_MAP: Record<string, string> = {
+  '1': 'p1', '2': 'p9', '3': 't3', '4': 't4', '5': 'p12',
+  '6': 'c1', '7': 'c8', '8': 'b1', '9': 'b2',
+  '10': 'q1', '11': 'q3', '12': 'po1', '13': 'pa3',
+  '14': 'o1', '15': 'o6', '16': 'a1', '17': 'a5',
 };
 
 export default function ExerciseDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const exercise = EXERCISE_DATA[id || '1'];
+
+  const resolvedId = id ? (LEGACY_ID_MAP[id] ?? id) : null;
+  const exercise = resolvedId ? ALL_EXERCISES.find((e) => e.id === resolvedId) : null;
 
   if (!exercise) {
     return (
-      <ScreenContainer>
-        <Text>Exercício não encontrado</Text>
+      <ScreenContainer padded edges={['top', 'bottom']}>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: spacing[4] }}>
+          <Text variant="bodyMd" color={colors.text.secondary}>← Voltar</Text>
+        </TouchableOpacity>
+        <Text color={colors.text.tertiary}>Exercício não encontrado (id: {id})</Text>
       </ScreenContainer>
     );
   }
